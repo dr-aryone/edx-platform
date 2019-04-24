@@ -54,7 +54,6 @@ django-pyfs
 django-ratelimit
 django-ratelimit-backend==1.1.1
 django-require
-django-rest-swagger                 # API documentation
 django-sekizai
 django-ses==0.8.4
 django-simple-history
@@ -64,7 +63,9 @@ django-storages==1.4.1
 django-user-tasks
 django-waffle==0.12.0
 django-webpack-loader               # Used to wire webpack bundles into the django asset pipeline
+djangorestframework==3.7.7
 djangorestframework-jwt
+drf-yasg                            # Replacement for django-rest-swagger
 edx-ace==0.1.10
 edx-analytics-data-api-client
 edx-ccx-keys

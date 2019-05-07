@@ -13,7 +13,7 @@ from django.test.client import Client
 from milestones.tests.utils import MilestonesTestCaseMixin
 
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
-from student.models import CourseEnrollment
+from student.models import CourseEnrollment, DashboardConfiguration
 from student.roles import GlobalStaff
 from student.tests.factories import UserFactory
 from student.views import get_course_enrollments
@@ -84,6 +84,27 @@ class TestCourseListing(ModuleStoreTestCase, MilestonesTestCaseMixin):
         # get dashboard
         courses_list = list(get_course_enrollments(self.student, None, []))
         self.assertEqual(len(courses_list), 0)
+
+    def _configure_courses_to_load(self, courses_to_load):
+        """Configure the amount of time the enrollment message will be displayed. """
+        config = DashboardConfiguration(courses_to_load=courses_to_load)
+        config.save()
+
+    def test_get_limited_number_of_courses_using_config(self):
+        course_location = self.store.make_course_key('Org0', 'Course0', 'Run0')
+        self._create_course_with_access_groups(course_location)
+
+        course_location = self.store.make_course_key('Org1', 'Course1', 'Run1')
+        self._create_course_with_access_groups(course_location)
+
+        # get dashboard
+        courses_list = list(get_course_enrollments(self.student, None, []))
+        self.assertEqual(len(courses_list), 2)
+
+        self._configure_courses_to_load(1)
+
+        courses_list = list(get_course_enrollments(self.student, None, []))
+        self.assertEqual(len(courses_list), 1)
 
     def test_errored_course_regular_access(self):
         """

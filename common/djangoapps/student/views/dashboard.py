@@ -205,7 +205,7 @@ def _create_recent_enrollment_message(course_enrollments, course_modes):  # pyli
         )
 
 
-def get_course_enrollments(user, org_whitelist, org_blacklist):
+def get_course_enrollments(user, org_whitelist, org_blacklist, load_all_courses=False):
     """
     Given a user, return a filtered set of his or her course enrollments.
 
@@ -218,7 +218,7 @@ def get_course_enrollments(user, org_whitelist, org_blacklist):
         generator[CourseEnrollment]: a sequence of enrollments to be displayed
         on the user's dashboard.
     """
-    for enrollment in CourseEnrollment.enrollments_for_user_with_overviews_preload(user):
+    for enrollment in CourseEnrollment.enrollments_for_user_with_overviews_preload(user, load_all_courses):
 
         # If the course is missing or broken, log an error and skip it.
         course_overview = enrollment.course_overview
@@ -592,9 +592,13 @@ def student_dashboard(request):
         'EMPTY_DASHBOARD_MESSAGE', None
     )
 
+    load_all_courses = False
+    if 'load_all_course' in request.GET:
+        load_all_courses = True
+
     # Get the org whitelist or the org blacklist for the current site
     site_org_whitelist, site_org_blacklist = get_org_black_and_whitelist_for_site()
-    course_enrollments = list(get_course_enrollments(user, site_org_whitelist, site_org_blacklist))
+    course_enrollments = list(get_course_enrollments(user, site_org_whitelist, site_org_blacklist, load_all_courses))
 
     # Get the entitlements for the user and a mapping to all available sessions for that entitlement
     # If an entitlement has no available sessions, pass through a mock course overview object
@@ -829,6 +833,8 @@ def student_dashboard(request):
             enr for enr in course_enrollments if entitlement.enrollment_course_run.course_id != enr.course_id
         ]
 
+    # Check whether we are showing all the courses or not
+
     context = {
         'urls': urls,
         'programs_data': programs_data,
@@ -879,6 +885,9 @@ def student_dashboard(request):
         'empty_dashboard_message': empty_dashboard_message,
         'recovery_email_message': recovery_email_message,
         'recovery_email_activation_message': recovery_email_activation_message,
+        'courses_count': CourseEnrollment.get_dashboard_courses_count(),
+        'load_all_courses': load_all_courses,
+        'total_enrollments': CourseEnrollment .enrollments_for_user(user).count(),
         # TODO START: Clean up REVEM-205 & REVEM-204.
         # The below context is for experiments in dashboard_metadata
         'course_prices': get_experiment_dashboard_metadata_context(course_enrollments) if DASHBOARD_METADATA_FLAG.is_enabled() else None,

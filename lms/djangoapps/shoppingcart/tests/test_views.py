@@ -1775,8 +1775,8 @@ class RegistrationCodeRedemptionCourseEnrollment(SharedModuleStoreTestCase):
         response = self.client.post(url)
         self.assertEquals(response.status_code, 403)
 
-        # now reset the time to 5 mins from now in future in order to unblock
-        reset_time = datetime.now(UTC) + timedelta(seconds=300)
+        # now reset the time to 6 mins from now in future in order to unblock
+        reset_time = datetime.now(UTC) + timedelta(seconds=361)
         with freeze_time(reset_time):
             response = self.client.post(url)
             self.assertEquals(response.status_code, 404)
@@ -1799,8 +1799,8 @@ class RegistrationCodeRedemptionCourseEnrollment(SharedModuleStoreTestCase):
         response = self.client.get(url)
         self.assertEquals(response.status_code, 403)
 
-        # now reset the time to 5 mins from now in future in order to unblock
-        reset_time = datetime.now(UTC) + timedelta(seconds=300)
+        # now reset the time to 6 mins from now in future in order to unblock
+        reset_time = datetime.now(UTC) + timedelta(seconds=361)
         with freeze_time(reset_time):
             response = self.client.get(url)
             self.assertEquals(response.status_code, 404)

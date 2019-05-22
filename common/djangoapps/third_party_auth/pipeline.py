@@ -550,7 +550,8 @@ def ensure_user_information(strategy, auth_entry, backend=None, user=None, socia
                 (current_provider.skip_email_verification or current_provider.send_to_registration_first))
 
     if not user:
-        if user_exists(details or {}):
+        email = details.get('email') if details else None
+        if user_exists({'email': email}):
             # User has not already authenticated and the details sent over from
             # identity provider belong to an existing user.
             return dispatch_to_login()

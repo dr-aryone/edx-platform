@@ -1556,7 +1556,7 @@
         @include text-align(left);
       }
 
-      .action-select input {
+      .action-select input, .action-select button {
         @extend %btn-verify-primary;
       }
 
@@ -2248,6 +2248,22 @@
     .wrapper-actions {
       margin-top: 20px;
     }
+  }
+
+  // First purchase offer banner
+  .first-purchase-offer-banner {
+    background-color: #DEE3F1;
+    font-size: 16px;
+    border-radius: 7px;
+    padding: 20px;
+
+    .first-purchase-offer-banner-bold {
+        font-weight: bold;
+        color: #23419F;
+        margin-right: 3px;
+        margin-left: 5px;
+    }
+
   }
 }
 

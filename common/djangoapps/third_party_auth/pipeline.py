@@ -551,7 +551,7 @@ def ensure_user_information(strategy, auth_entry, backend=None, user=None, socia
 
     def is_provider_saml():
         current_provider = provider.Registry.get_from_pipeline({'backend': current_partial.backend, 'kwargs': kwargs})
-        return current_provider and current_provider == provider.Registry.get_enabled_by_backend_name('tpa-saml')
+        return current_provider and current_provider in list(provider.Registry.get_enabled_by_backend_name('tpa-saml'))
 
     if not user:
         if is_provider_saml():

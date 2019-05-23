@@ -4,7 +4,6 @@ This module contains utility functions for grading.
 from __future__ import absolute_import, unicode_literals
 
 import logging
-import time
 from datetime import timedelta
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -15,7 +14,7 @@ from opaque_keys.edx.keys import UsageKey
 from courseware.models import StudentModule
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from student.models import CourseEnrollment
-from super_csv import ChecksumMixin, CSVProcessor, DeferrableMixin
+from super_csv.csv_processor import ChecksumMixin, CSVProcessor, DeferrableMixin
 
 from .config.waffle import ENFORCE_FREEZE_GRADE_AFTER_COURSE_END, waffle_flags
 
@@ -37,8 +36,10 @@ class ScoreCSVProcessor(ChecksumMixin, DeferrableMixin, CSVProcessor):
     handle_undo = False
 
     def __init__(self, **kwargs):
-        self.now = time.time()
         self.max_points = 1
+        self.user_id = None
+        self.track = None
+        self.cohort = None
         self.display_name = ''
         super(ScoreCSVProcessor, self).__init__(**kwargs)
         self.users_seen = {}
@@ -89,12 +90,19 @@ class ScoreCSVProcessor(ChecksumMixin, DeferrableMixin, CSVProcessor):
         set_score(row['block_id'], row['user_id'], row['new_points'], row['max_points'])
         return True, undo
 
-    def _get_enrollments(self, course_id, **kwargs):  # pylint: disable=unused-argument
+    def _get_enrollments(self, course_id, track=None, cohort=None):
         """
         Return iterator of enrollments, as dicts.
         """
         enrollments = CourseEnrollment.objects.filter(
             course_id=course_id).select_related('programcourseenrollment')
+        if track:
+            enrollments = enrollments.filter(mode=track)
+        if cohort:
+            enrollments = enrollments.filter(
+                user__cohortmembership__course_id=course_id,
+                user__cohortmembership__course_user_group__name=cohort)
+
         for enrollment in enrollments:
             enrollment_dict = {
                 'user_id': enrollment.user.id,
@@ -119,7 +127,9 @@ class ScoreCSVProcessor(ChecksumMixin, DeferrableMixin, CSVProcessor):
 
         students = get_scores(location)
 
-        enrollments = self._get_enrollments(location.course_key)
+        enrollments = self._get_enrollments(location.course_key,
+                                            track=self.track,
+                                            cohort=self.cohort)
         for enrollment in enrollments:
             row = {
                 'block_id': location,

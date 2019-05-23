@@ -549,12 +549,22 @@ def ensure_user_information(strategy, auth_entry, backend=None, user=None, socia
         return (current_provider and
                 (current_provider.skip_email_verification or current_provider.send_to_registration_first))
 
+    def is_provider_saml():
+        current_provider = provider.Registry.get_from_pipeline({'backend': current_partial.backend, 'kwargs': kwargs})
+        return current_provider and current_provider == provider.Registry.get_enabled_by_backend_name('tpa-saml')
+
     if not user:
-        email = details.get('email') if details else None
-        if user_exists({'email': email}):
-            # User has not already authenticated and the details sent over from
-            # identity provider belong to an existing user.
-            return dispatch_to_login()
+        if is_provider_saml():
+            email = details.get('email') if details else None
+            if user_exists({'email': email}):
+                # User has not already authenticated and the details sent over from
+                # saml identity provider belong to an existing user.
+                return dispatch_to_login()
+        else:
+            if user_exists(details or {}):
+                # User has not already authenticated and the details sent over from
+                # non-saml identity provider belong to an existing user.
+                return dispatch_to_login()
 
         if is_api(auth_entry):
             return HttpResponseBadRequest()
